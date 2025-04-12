@@ -1,0 +1,846 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Biological Classification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #e0f7e9, #f0fdf4);
+      padding: 20px;
+      direction: ltr;
+      text-align: center;
+    }
+    h1 {
+      color: #166534;
+      margin-bottom: 30px;
+    }
+    input {
+      padding: 12px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 400px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      background-color: #22c55e;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #15803d;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #ffffffcc;
+      border-radius: 16px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: left;
+      border-left: 6px solid #22c55e;
+    }
+    img {
+      width: 100%;
+      max-width: 300px;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+</style>
+</head>
+<body>
+  <h1>Biological Classification</h1>
+
+  <label for="typeFilter" style="margin-right:10px; font-weight:bold;">Filter:</label>
+  <select id="typeFilter" onchange="filterOrganisms()" style="padding:6px; margin-bottom: 15px; border-radius: 6px;">
+    <option value="all">All</option>
+    <option value="animal">Animals</option>
+    <option value="plant">Plants</option>
+  </select>
+  <br />
+
+  <input list="organisms" id="organismInput" placeholder="Type an organism name..." />
+  <datalist id="organisms"></datalist>
+  <br />
+  <button onclick="classify()">Classify</button>
+  <button onclick="speakName()">Speak</button>
+  <button onclick="showVetInfo()">Veterinary Advice</button>
+<button onclick="showVetStudentInfo()">Vet Student Support</button>
+
+
+  <div id="result" class="result"></div>
+
+  <script>
+    const data = {
+  "Elephant": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/37/African_Bush_Elephant.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Proboscidea",
+    "Family": "Elephantidae",
+    "Genus": "Loxodonta",
+    "Species": "Loxodonta africana"
+  },
+  "Penguin": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Emperor_Penguin_Manchot_empereur.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Aves",
+    "Order": "Sphenisciformes",
+    "Family": "Spheniscidae",
+    "Genus": "Aptenodytes",
+    "Species": "Aptenodytes forsteri"
+  },
+  "Cactus": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Opuntia_ficus-indica.JPG",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Caryophyllales",
+    "Family": "Cactaceae",
+    "Genus": "Opuntia",
+    "Species": "Opuntia ficus-indica"
+  },
+  "Octopus": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/18/Octopus2.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Mollusca",
+    "Class": "Cephalopoda",
+    "Order": "Octopoda",
+    "Family": "Octopodidae",
+    "Genus": "Octopus",
+    "Species": "Octopus vulgaris"
+  },
+  "Koala": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/Koala_climbing_tree.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Diprotodontia",
+    "Family": "Phascolarctidae",
+    "Genus": "Phascolarctos",
+    "Species": "Phascolarctos cinereus"
+  },
+  "Sunflower": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/40/Sunflower_sky_backdrop.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Asterales",
+    "Family": "Asteraceae",
+    "Genus": "Helianthus",
+    "Species": "Helianthus annuus"
+  },
+  "Starfish": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/36/Starfish_Megabalanus_coccopoma.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Echinodermata",
+    "Class": "Asteroidea",
+    "Order": "Forcipulatida",
+    "Family": "Asteriidae",
+    "Genus": "Pisaster",
+    "Species": "Pisaster ochraceus"
+  },
+  "Peacock": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Peacock_Plumage.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Aves",
+    "Order": "Galliformes",
+    "Family": "Phasianidae",
+    "Genus": "Pavo",
+    "Species": "Pavo cristatus"
+  },
+  "Pine Tree": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Scots_pine.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Pinophyta",
+    "Class": "Pinopsida",
+    "Order": "Pinales",
+    "Family": "Pinaceae",
+    "Genus": "Pinus",
+    "Species": "Pinus sylvestris"
+  },
+  "Jellyfish": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/12/Aurelia_aurita_%28aka%29.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Cnidaria",
+    "Class": "Scyphozoa",
+    "Order": "Semaeostomeae",
+    "Family": "Ulmaridae",
+    "Genus": "Aurelia",
+    "Species": "Aurelia aurita"
+  },
+  "Zebra": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/03/Plains_Zebra_Equus_quagga.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Perissodactyla",
+    "Family": "Equidae",
+    "Genus": "Equus",
+    "Species": "Equus quagga"
+  },
+  "Panda": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Grosser_Panda.JPG",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Carnivora",
+    "Family": "Ursidae",
+    "Genus": "Ailuropoda",
+    "Species": "Ailuropoda melanoleuca"
+  },
+  "Giraffe": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Giraffe_standing.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Artiodactyla",
+    "Family": "Giraffidae",
+    "Genus": "Giraffa",
+    "Species": "Giraffa camelopardalis"
+  },
+  "Kangaroo": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Kangaroo_Australia_01.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Diprotodontia",
+    "Family": "Macropodidae",
+    "Genus": "Macropus",
+    "Species": "Macropus rufus"
+  },
+  "Rose": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/3/32/Rose_Flower_Pink.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Rosales",
+    "Family": "Rosaceae",
+    "Genus": "Rosa",
+    "Species": "Rosa chinensis"
+  },
+  "Lily": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Lilium_candidum1.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Monocots",
+    "Order": "Liliales",
+    "Family": "Liliaceae",
+    "Genus": "Lilium",
+    "Species": "Lilium candidum"
+  },
+  "Shark": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/56/White_shark.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Chondrichthyes",
+    "Order": "Lamniformes",
+    "Family": "Lamnidae",
+    "Genus": "Carcharodon",
+    "Species": "Carcharodon carcharias"
+  },
+  "Crocodile": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Crocodile_%28Crocodylus_niloticus%29.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Reptilia",
+    "Order": "Crocodylia",
+    "Family": "Crocodylidae",
+    "Genus": "Crocodylus",
+    "Species": "Crocodylus niloticus"
+  },
+  "Pineapple": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Pineapple_and_cross_section.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Monocots",
+    "Order": "Poales",
+    "Family": "Bromeliaceae",
+    "Genus": "Ananas",
+    "Species": "Ananas comosus"
+  },
+  "Lavender": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/68/Lavandula_angustifolia_3.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Lamiales",
+    "Family": "Lamiaceae",
+    "Genus": "Lavandula",
+    "Species": "Lavandula angustifolia"
+  },
+  "Orchid": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/24/Orchidaceae_flower.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Monocots",
+    "Order": "Asparagales",
+    "Family": "Orchidaceae",
+    "Genus": "Phalaenopsis",
+    "Species": "Phalaenopsis amabilis"
+  },
+  "Pelican": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Pelican_in_flight.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Aves",
+    "Order": "Pelecaniformes",
+    "Family": "Pelecanidae",
+    "Genus": "Pelecanus",
+    "Species": "Pelecanus occidentalis"
+  },
+  "Walrus": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/6/61/Walrus_-_Alaska.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Carnivora",
+    "Family": "Odobenidae",
+    "Genus": "Odobenus",
+    "Species": "Odobenus rosmarus"
+  },
+  "Hummingbird": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Hummingbird.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Aves",
+    "Order": "Apodiformes",
+    "Family": "Trochilidae",
+    "Genus": "Archilochus",
+    "Species": "Archilochus colubris"
+  },
+  "Maple Tree": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/a/a7/Acer_saccharum_leaf_cluster.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Sapindales",
+    "Family": "Sapindaceae",
+    "Genus": "Acer",
+    "Species": "Acer saccharum"
+  },
+  "Seahorse": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/10/Hippocampus_kuda.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Actinopterygii",
+    "Order": "Syngnathiformes",
+    "Family": "Syngnathidae",
+    "Genus": "Hippocampus",
+    "Species": "Hippocampus kuda"
+  },
+  "Lemur": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Lemur_catta_01.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Primates",
+    "Family": "Lemuridae",
+    "Genus": "Lemur",
+    "Species": "Lemur catta"
+  },
+  "Sea Turtle": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Sea_Turtle_Swimming.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Reptilia",
+    "Order": "Testudines",
+    "Family": "Cheloniidae",
+    "Genus": "Chelonia",
+    "Species": "Chelonia mydas"
+  },
+  "Chameleon": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Chameleon_head.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Reptilia",
+    "Order": "Squamata",
+    "Family": "Chamaeleonidae",
+    "Genus": "Chamaeleo",
+    "Species": "Chamaeleo calyptratus"
+  },
+  "Snail": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/05/Helix_pomatia.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Mollusca",
+    "Class": "Gastropoda",
+    "Order": "Stylommatophora",
+    "Family": "Helicidae",
+    "Genus": "Helix",
+    "Species": "Helix pomatia"
+  },
+  "Dolphin": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/2/26/Bottlenose_Dolphin_KSC04pd0178.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Artiodactyla",
+    "Family": "Delphinidae",
+    "Genus": "Tursiops",
+    "Species": "Tursiops truncatus"
+  },
+  "Toad": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/1/1a/European_common_toad.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Amphibia",
+    "Order": "Anura",
+    "Family": "Bufonidae",
+    "Genus": "Bufo",
+    "Species": "Bufo bufo"
+  },
+  "Fern": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/07/Nephrolepis_exaltata_leaves.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Pteridophyta",
+    "Class": "Polypodiopsida",
+    "Order": "Polypodiales",
+    "Family": "Nephrolepidaceae",
+    "Genus": "Nephrolepis",
+    "Species": "Nephrolepis exaltata"
+  },
+  "Moose": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Moose_in_field.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Artiodactyla",
+    "Family": "Cervidae",
+    "Genus": "Alces",
+    "Species": "Alces alces"
+  },
+  "Sloth": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Bradypus.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Pilosa",
+    "Family": "Bradypodidae",
+    "Genus": "Bradypus",
+    "Species": "Bradypus variegatus"
+  },
+  "Bat": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/0/01/Fruit_bat.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Chiroptera",
+    "Family": "Pteropodidae",
+    "Genus": "Pteropus",
+    "Species": "Pteropus vampyrus"
+  },
+  "Owl": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Bubo_bubo_1_%28Martin_Mecnarowski%29.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Aves",
+    "Order": "Strigiformes",
+    "Family": "Strigidae",
+    "Genus": "Bubo",
+    "Species": "Bubo bubo"
+  },
+  "Raccoon": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Common_raccoon.jpg",
+    "Kingdom": "Animalia",
+    "Phylum": "Chordata",
+    "Class": "Mammalia",
+    "Order": "Carnivora",
+    "Family": "Procyonidae",
+    "Genus": "Procyon",
+    "Species": "Procyon lotor"
+  },
+  "Mango Tree": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Mangifera_indica.jpg",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Sapindales",
+    "Family": "Anacardiaceae",
+    "Genus": "Mangifera",
+    "Species": "Mangifera indica"
+  },
+  "Dandelion": {
+    "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/Taraxacum_officinale_001.JPG",
+    "Kingdom": "Plantae",
+    "Phylum": "Angiosperms",
+    "Class": "Eudicots",
+    "Order": "Asterales",
+    "Family": "Asteraceae",
+    "Genus": "Taraxacum",
+    "Species": "Taraxacum officinale"
+  }
+};
+
+    // Fill datalist with organism names
+    const datalist = document.getElementById("organisms");
+    for (let key in data) {
+      const option = document.createElement("option");
+      option.value = key;
+      datalist.appendChild(option);
+    }
+
+    function classify() {
+      const input = document.getElementById("organismInput").value.trim();
+      const resultDiv = document.getElementById("result");
+
+      if (data[input]) {
+        let html = `<h3>Classification of ${input}:</h3>`;
+        html += `<img src="${data[input].image}" alt="${input}">`;
+        html += "<ul>";
+        for (let key in data[input]) {
+          if (key !== "image") {
+            html += `<li><strong>${key}:</strong> ${data[input][key]}</li>`;
+          }
+        }
+        
+        html += "</ul>";
+        // Add extra info
+        const extras = {
+
+          "Rabbit": "Rabbits are small mammals known for their long ears and gentle nature.",
+          "Hamster": "Hamsters are small, nocturnal rodents that love to burrow and hoard food.",
+          "Parrot": "Parrots are intelligent birds known for mimicking human speech and vivid colors.",
+          "Turtle": "Turtles are reptiles with a hard shell, often kept as low-maintenance pets.",
+          "Goldfish": "Goldfish are popular aquarium pets that thrive in clean water with proper feeding.",
+          "Cat": "Cats are domesticated animals known for their agility and companionship.",
+          "Lion": "Lions are wild big cats known as the kings of the jungle.",
+          "Palm": "Palm trees grow in warm climates and are known for producing dates.",
+          "Frog": "Frogs are amphibians that live both in water and on land.",
+          "Wheat": "Wheat is a major cereal crop used to produce flour for bread.",
+          "Dog": "Dogs are loyal domestic animals often referred to as man's best friend.",
+          "Eagle": "Eagles are large birds of prey with excellent eyesight and powerful wings.",
+          "Mushroom": "Mushrooms are fungi that grow in damp environments and can be edible or poisonous.",
+          "Coral": "Corals are marine animals that build coral reefs, essential for ocean ecosystems.",
+          "Yeast": "Yeast is a type of fungus used in baking and fermentation processes.",
+        };
+        if (extras[input]) {
+          html += `<p><strong>More info:</strong> ${extras[input]}</p>`;
+
+        // Add veterinary info
+        const vetInfo = {
+  
+        "Rabbit": "Common issue: Dental overgrowth. Advice: Provide hay and regular checkups to avoid teeth problems.",
+        "Hamster": "Common issue: Wet tail disease. Advice: Keep cage clean and reduce stress; consult vet if symptoms appear.",
+        "Parrot": "Common issue: Feather plucking. Advice: Provide stimulation and a balanced diet; consult an avian vet.",
+        "Turtle": "Common issue: Shell rot. Advice: Maintain proper humidity and hygiene; visit a reptile vet if needed.",
+        "Goldfish": "Common issue: Fin rot. Advice: Clean tank regularly and avoid overfeeding to prevent infection.",
+        "Cat": "Common issue: Fleas or skin irritation. Advice: Use anti-flea shampoo or consult a vet for skin treatment.",
+          "Dog": "Common issue: Parvovirus. Advice: Ensure proper vaccination and consult a vet immediately if symptoms appear.",
+          "Lion": "Common issue: Dental problems in captivity. Advice: Routine dental checks and enrichment activities help prevent issues.",
+          "Frog": "Common issue: Fungal infections. Advice: Maintain clean, moist habitats and avoid handling with dry hands.",
+          "Eagle": "Common issue: Wing injuries. Advice: Immediate care by wildlife vets is crucial. Avoid human interference.",
+          "Coral": "Common issue: Coral bleaching. Advice: Maintain water temperature and reduce pollution to support coral health.",
+        };
+        
+        const videos = {
+          "Cat": "https://www.youtube.com/watch?v=5dsGWM5XGdg",
+          "Dog": "https://www.youtube.com/watch?v=V4LnorVVxfw",
+          "Lion": "https://www.youtube.com/watch?v=o0gN4UjBGCY",
+          "Frog": "https://www.youtube.com/watch?v=F3QY5vMz_6I",
+          "Eagle": "https://www.youtube.com/watch?v=QKQh3OeJcCQ",
+          "Coral": "https://www.youtube.com/watch?v=0b2UQKmZB94",
+          "Rabbit": "https://www.youtube.com/watch?v=RITaSgGkVfA",
+          "Hamster": "https://www.youtube.com/watch?v=K5Hn2HZ69wo",
+          "Parrot": "https://www.youtube.com/watch?v=ocwH5FyaP_Y",
+          "Turtle": "https://www.youtube.com/watch?v=BR1N3y2H0TQ",
+          "Goldfish": "https://www.youtube.com/watch?v=YzBFEg0AVKk",
+        };
+        if (videos[input]) {
+          html += `<p><a href="${videos[input]}" target="_blank" style="color:#1d4ed8; text-decoration:underline;">Watch Video</a></p>`;
+        }
+
+        if (vetInfo[input]) {
+          html += `<p><strong>Veterinary Advice:</strong> ${vetInfo[input]}</p>`;
+        }
+
+        }
+
+        resultDiv.innerHTML = html;
+      } else {
+        resultDiv.innerHTML = `<p>No data available for "${input}".</p>`;
+      }
+    }
+
+    
+    function showVetInfo() {
+      const input = document.getElementById("organismInput").value.trim();
+      const vetInfo = {
+
+        "Rabbit": "Common issue: Dental overgrowth. Advice: Provide hay and regular checkups to avoid teeth problems.",
+        "Hamster": "Common issue: Wet tail disease. Advice: Keep cage clean and reduce stress; consult vet if symptoms appear.",
+        "Parrot": "Common issue: Feather plucking. Advice: Provide stimulation and a balanced diet; consult an avian vet.",
+        "Turtle": "Common issue: Shell rot. Advice: Maintain proper humidity and hygiene; visit a reptile vet if needed.",
+        "Goldfish": "Common issue: Fin rot. Advice: Clean tank regularly and avoid overfeeding to prevent infection.",
+        "Cat": "Common issue: Fleas or skin irritation. Advice: Use anti-flea shampoo or consult a vet for skin treatment.",
+        "Dog": "Common issue: Parvovirus. Advice: Ensure proper vaccination and consult a vet immediately if symptoms appear.",
+        "Lion": "Common issue: Dental problems in captivity. Advice: Routine dental checks and enrichment activities help prevent issues.",
+        "Frog": "Common issue: Fungal infections. Advice: Maintain clean, moist habitats and avoid handling with dry hands.",
+        "Eagle": "Common issue: Wing injuries. Advice: Immediate care by wildlife vets is crucial. Avoid human interference.",
+        "Coral": "Common issue: Coral bleaching. Advice: Maintain water temperature and reduce pollution to support coral health."
+      };
+      const resultDiv = document.getElementById("result");
+      
+        const videos = {
+          "Cat": "https://www.youtube.com/watch?v=5dsGWM5XGdg",
+          "Dog": "https://www.youtube.com/watch?v=V4LnorVVxfw",
+          "Lion": "https://www.youtube.com/watch?v=o0gN4UjBGCY",
+          "Frog": "https://www.youtube.com/watch?v=F3QY5vMz_6I",
+          "Eagle": "https://www.youtube.com/watch?v=QKQh3OeJcCQ",
+          "Coral": "https://www.youtube.com/watch?v=0b2UQKmZB94",
+          "Rabbit": "https://www.youtube.com/watch?v=RITaSgGkVfA",
+          "Hamster": "https://www.youtube.com/watch?v=K5Hn2HZ69wo",
+          "Parrot": "https://www.youtube.com/watch?v=ocwH5FyaP_Y",
+          "Turtle": "https://www.youtube.com/watch?v=BR1N3y2H0TQ",
+          "Goldfish": "https://www.youtube.com/watch?v=YzBFEg0AVKk",
+        };
+        if (videos[input]) {
+          html += `<p><a href="${videos[input]}" target="_blank" style="color:#1d4ed8; text-decoration:underline;">Watch Video</a></p>`;
+        }
+
+        if (vetInfo[input]) {
+        resultDiv.innerHTML += `<p style='margin-top:10px; color:#0f5132; background:#d1e7dd; padding:10px; border-radius:8px;'><strong>Veterinary Advice:</strong> ${vetInfo[input]}</p>`;
+      } else {
+        resultDiv.innerHTML += `<p style='margin-top:10px; color:#842029; background:#f8d7da; padding:10px; border-radius:8px;'>No veterinary info available for "${input}".</p>`;
+      }
+    }
+
+
+    
+    
+    const allOrganisms = {
+      "animal": ["Elephant", "Penguin", "Octopus", "Koala", "Starfish", "Peacock", "Jellyfish", "Zebra", "Panda", "Giraffe", "Kangaroo", "Shark", "Crocodile", "Pelican", "Walrus", "Hummingbird", "Seahorse", "Lemur", "Sea Turtle", "Chameleon", "Snail", "Dolphin", "Toad", "Moose", "Sloth", "Bat", "Owl", "Raccoon"],
+      "plant": ["Cactus", "Sunflower", "Pine Tree", "Rose", "Lily", "Pineapple", "Lavender", "Orchid", "Maple Tree", "Fern", "Mango Tree", "Dandelion"]
+    };
+
+
+    function filterOrganisms() {
+      const type = document.getElementById("typeFilter").value;
+      const datalist = document.getElementById("organisms");
+      datalist.innerHTML = "";
+      let items = [];
+      if (type === "animal") {
+        items = allOrganisms.animal;
+      } else if (type === "plant") {
+        items = allOrganisms.plant;
+      } else {
+        items = allOrganisms.animal.concat(allOrganisms.plant);
+      }
+      items.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        datalist.appendChild(option);
+      });
+    }
+
+    // initialize on load
+    window.onload = filterOrganisms;
+
+
+    function speakName() {
+      const input = document.getElementById("organismInput").value.trim();
+      if (input) {
+        const utterance = new SpeechSynthesisUtterance(input);
+        utterance.lang = "en-US";
+        speechSynthesis.speak(utterance);
+      }
+    }
+  
+function showVetStudentInfo() {
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = `
+    <h3>Information for Veterinary Students</h3>
+    <p>Welcome veterinary students! Here are some tips:</p>
+    <ul>
+      <li>Study animal anatomy using diagrams and videos.</li>
+      <li>Practice common clinical cases like infections and skin diseases.</li>
+      <li>Follow recent scientific articles on pet and wildlife care.</li>
+      <li>Visit veterinary hospitals for hands-on training.</li>
+    </ul>
+  `;
+}
+
+</script>
+
+  <div id="quiz" class="result" style="margin-top: 40px;">
+    <h3>Quick Quiz</h3>
+    <p>To which Kingdom does the organism <strong>Frog</strong> belong?</p>
+    <button onclick="checkAnswer('Plantae')">Plantae</button>
+    <button onclick="checkAnswer('Fungi')">Fungi</button>
+    <button onclick="checkAnswer('Animalia')">Animalia</button>
+    <button onclick="checkAnswer('Protista')">Protista</button>
+    <p id="quizResult" style="margin-top: 15px; font-weight: bold;"></p>
+  </div>
+  <script>
+    function checkAnswer(answer) {
+      const result = document.getElementById("quizResult");
+      if (answer === "Animalia") {
+        result.style.color = "green";
+        result.textContent = "Correct! Frog belongs to the Kingdom Animalia.";
+      } else {
+        result.style.color = "red";
+        result.textContent = "Incorrect. Try again!";
+      }
+    }
+  
+function showVetStudentInfo() {
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = `
+    <h3>Information for Veterinary Students</h3>
+    <p>Welcome veterinary students! Here are some tips:</p>
+    <ul>
+      <li>Study animal anatomy using diagrams and videos.</li>
+      <li>Practice common clinical cases like infections and skin diseases.</li>
+      <li>Follow recent scientific articles on pet and wildlife care.</li>
+      <li>Visit veterinary hospitals for hands-on training.</li>
+    </ul>
+  `;
+}
+
+</script>
+
+
+  <div id="quizContainer" class="result" style="margin-top: 40px;">
+    <h3>Biology Quiz (10 Questions)</h3>
+    <div id="questionBox">
+      <p id="questionText"></p>
+      <div id="options"></div>
+      <p id="feedback" style="margin-top: 15px; font-weight: bold;"></p>
+      <button id="nextBtn" onclick="nextQuestion()" style="display:none; margin-top: 10px;">Next</button>
+    </div>
+    <p id="finalScore" style="font-weight:bold; margin-top:20px;"></p>
+  </div>
+
+  <script>
+    const quizData = [
+      {
+        question: "What is the Kingdom of the Cat?",
+        options: ["Plantae", "Animalia", "Fungi", "Protista"],
+        answer: "Animalia"
+      },
+      {
+        question: "Which class does the Lion belong to?",
+        options: ["Aves", "Amphibia", "Mammalia", "Reptilia"],
+        answer: "Mammalia"
+      },
+      {
+        question: "What is the Genus of the Wheat plant?",
+        options: ["Triticum", "Phoenix", "Poaceae", "Ranidae"],
+        answer: "Triticum"
+      },
+      {
+        question: "Mushrooms belong to which Kingdom?",
+        options: ["Animalia", "Plantae", "Fungi", "Monera"],
+        answer: "Fungi"
+      },
+      {
+        question: "Coral is part of which Phylum?",
+        options: ["Chordata", "Cnidaria", "Porifera", "Annelida"],
+        answer: "Cnidaria"
+      },
+      {
+        question: "What is the Species name of the Dog?",
+        options: ["Canis lupus familiaris", "Felis catus", "Panthera leo", "Rana temporaria"],
+        answer: "Canis lupus familiaris"
+      },
+      {
+        question: "Eagles belong to which Class?",
+        options: ["Aves", "Mammalia", "Reptilia", "Insecta"],
+        answer: "Aves"
+      },
+      {
+        question: "Yeast is used in...?",
+        options: ["Photosynthesis", "Baking and fermentation", "Predation", "Flight"],
+        answer: "Baking and fermentation"
+      },
+      {
+        question: "Palm trees produce...?",
+        options: ["Wheat", "Apples", "Dates", "Milk"],
+        answer: "Dates"
+      },
+      {
+        question: "What is the Order of Frogs?",
+        options: ["Carnivora", "Anura", "Poales", "Arecales"],
+        answer: "Anura"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function showQuestion() {
+      const q = quizData[currentQuestion];
+      document.getElementById("questionText").textContent = q.question;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("nextBtn").style.display = "none";
+
+      q.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option;
+        btn.style.margin = "5px";
+        btn.onclick = () => checkQuizAnswer(option, q.answer);
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    function checkQuizAnswer(selected, correct) {
+      const feedback = document.getElementById("feedback");
+      if (selected === correct) {
+        feedback.textContent = "Correct!";
+        feedback.style.color = "green";
+        score++;
+      } else {
+        feedback.textContent = `Incorrect. Correct answer is: ${correct}`;
+        feedback.style.color = "red";
+      }
+      document.getElementById("nextBtn").style.display = "inline-block";
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        showQuestion();
+      } else {
+        document.getElementById("questionBox").style.display = "none";
+        document.getElementById("finalScore").textContent = `You scored ${score} out of ${quizData.length}!`;
+      }
+    }
+
+    showQuestion();
+  
+function showVetStudentInfo() {
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = `
+    <h3>Information for Veterinary Students</h3>
+    <p>Welcome veterinary students! Here are some tips:</p>
+    <ul>
+      <li>Study animal anatomy using diagrams and videos.</li>
+      <li>Practice common clinical cases like infections and skin diseases.</li>
+      <li>Follow recent scientific articles on pet and wildlife care.</li>
+      <li>Visit veterinary hospitals for hands-on training.</li>
+    </ul>
+  `;
+}
+
+</script>
+
+</body>
+</html>
